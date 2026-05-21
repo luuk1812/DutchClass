@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\Llvet\\\\Desktop\\\\DutchClass\" | Where-Object { -not $_.PSIsContainer } | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"C:\\\\Users\\\\Llvet\\\\Desktop\\\\DutchClass\\\\\", \"\"\\) })"
+    ]
+  }
+}

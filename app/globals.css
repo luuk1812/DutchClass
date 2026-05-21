@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .card-flip {
+    perspective: 1000px;
+  }
+  .card-inner {
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+  }
+  .card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+  .card-front,
+  .card-back {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .card-back {
+    transform: rotateY(180deg);
+  }
+}
