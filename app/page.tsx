@@ -36,19 +36,21 @@ export default async function HomePage() {
       </div>
 
       {/* Anki-style deck overview */}
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
-          <span className="font-semibold text-gray-700">Dutch</span>
-          <div className="flex gap-6 text-sm font-semibold">
-            <span className="text-blue-500">{newCount}</span>
-            <span className="text-orange-500">{learningCount ?? 0}</span>
-            <span className="text-green-600">{dueCount ?? 0}</span>
+      <div className="bg-white rounded-2xl border shadow-sm px-6 py-4 flex items-center justify-between">
+        <span className="font-semibold text-gray-700">Dutch</span>
+        <div className="flex gap-8 text-center">
+          <div>
+            <p className="text-sm font-bold text-blue-500">{newCount}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">New</p>
           </div>
-        </div>
-        <div className="px-6 py-2 flex justify-end gap-6 text-xs text-gray-400 font-medium uppercase tracking-wide">
-          <span>New</span>
-          <span>Learning</span>
-          <span>Due</span>
+          <div>
+            <p className="text-sm font-bold text-orange-500">{learningCount ?? 0}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Learning</p>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-green-600">{dueCount ?? 0}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide">Due</p>
+          </div>
         </div>
       </div>
 
