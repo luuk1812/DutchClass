@@ -1,14 +1,19 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const today = new Date().toISOString().split("T")[0];
 
   const { count: dueCount } = await supabase
     .from("card_progress")
     .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
     .lte("due_date", today);
 
   const { count: totalCards } = await supabase

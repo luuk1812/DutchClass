@@ -1,34 +1,57 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import FlashcardSession from "@/components/FlashcardSession";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function FlashcardsPage() {
   const supabase = await createServerSupabaseClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   const today = new Date().toISOString().split("T")[0];
 
-  // Get due cards with their content
+  // Due cards for this user
   const { data: dueProgress } = await supabase
     .from("card_progress")
     .select("*, cards(*)")
+    .eq("user_id", user.id)
     .lte("due_date", today)
     .order("due_date", { ascending: true })
     .limit(20);
 
-  // Also get new cards (no progress yet) to fill session up to 20
+  // New cards this user has never seen
   const reviewedCardIds = dueProgress?.map((p) => p.card_id) ?? [];
+
+  // Get all cards this user has any progress on (to exclude from "new")
+  const { data: allProgress } = await supabase
+    .from("card_progress")
+    .select("card_id")
+    .eq("user_id", user.id);
+
+  const allReviewedIds = allProgress?.map((p) => p.card_id) ?? [];
   const needed = 20 - (dueProgress?.length ?? 0);
 
-  let newCards: { id: string; dutch: string; english: string; example_nl: string | null; example_en: string | null; category: string; created_at: string }[] = [];
+  let newCards: {
+    id: string;
+    dutch: string;
+    english: string;
+    example_nl: string | null;
+    example_en: string | null;
+    category: string;
+    created_at: string;
+  }[] = [];
+
   if (needed > 0) {
-    const query = supabase.from("cards").select("*").limit(needed);
-    if (reviewedCardIds.length > 0) {
-      query.not("id", "in", `(${reviewedCardIds.join(",")})`);
+    let query = supabase.from("cards").select("*").limit(needed);
+    if (allReviewedIds.length > 0) {
+      query = query.not("id", "in", `(${allReviewedIds.join(",")})`);
     }
     const { data } = await query;
     newCards = data ?? [];
   }
 
-  const dueCards = dueProgress?.map((p) => ({ progress: p, card: p.cards })) ?? [];
+  const dueCards = (dueProgress ?? []).map((p) => ({ progress: p, card: p.cards }));
   const brandNewCards = newCards.map((c) => ({ progress: null, card: c }));
   const allCards = [...dueCards, ...brandNewCards];
 

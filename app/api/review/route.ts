@@ -24,11 +24,18 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  // Load existing progress if any
+  // Require authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Load this user's existing progress for the card
   const { data: existing } = await supabase
     .from("card_progress")
     .select("*")
     .eq("card_id", card_id)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   const next = calculateNextReview(
@@ -46,12 +53,11 @@ export async function POST(req: NextRequest) {
       .update({ ...next, last_reviewed: now })
       .eq("id", existing.id);
   } else {
-    // user_id is intentionally omitted here — add auth if needed
     await supabase.from("card_progress").insert({
       card_id,
+      user_id: user.id,
       ...next,
       last_reviewed: now,
-      repetitions: next.repetitions,
     });
   }
 
