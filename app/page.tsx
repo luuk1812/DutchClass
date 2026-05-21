@@ -55,7 +55,7 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
           href="/flashcards"
-          className="relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-dutch-orange text-white p-8 hover:opacity-90 transition font-semibold text-lg shadow"
+          className="relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-dutch-orange text-white p-6 sm:p-8 hover:opacity-90 transition font-semibold text-lg shadow"
         >
           <span className="text-4xl">🃏</span>
           Study now
@@ -66,7 +66,7 @@ export default async function HomePage() {
 
         <Link
           href="/theory"
-          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-dutch-blue text-white p-8 hover:opacity-90 transition font-semibold text-lg shadow"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-dutch-blue text-white p-6 sm:p-8 hover:opacity-90 transition font-semibold text-lg shadow"
         >
           <span className="text-4xl">📖</span>
           Grammar &amp; theory

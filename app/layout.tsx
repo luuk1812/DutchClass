@@ -18,7 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body>
         {user && <NavBar />}
-        <main className={user ? "max-w-3xl mx-auto px-4 py-8" : ""}>
+        <main className={user ? "max-w-3xl mx-auto px-4 py-6 sm:py-8" : ""}>
           {children}
         </main>
       </body>

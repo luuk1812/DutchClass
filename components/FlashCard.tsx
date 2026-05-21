@@ -76,8 +76,7 @@ export default function FlashCard({ card, progress, settings, onRate }: Props) {
 
       {/* Card */}
       <div
-        className="card-flip w-full cursor-pointer select-none"
-        style={{ height: 220 }}
+        className="card-flip w-full cursor-pointer select-none h-48 sm:h-56"
         onClick={() => setFlipped((f) => !f)}
       >
         <div className={`card-inner relative w-full h-full ${flipped ? "flipped" : ""}`}>
@@ -110,7 +109,7 @@ export default function FlashCard({ card, progress, settings, onRate }: Props) {
               <button
                 key={r}
                 onClick={() => handleRate(r)}
-                className={`flex flex-col items-center py-2.5 rounded-xl text-white font-semibold text-sm transition ${ratingColor(r)}`}
+                className={`flex flex-col items-center py-3 rounded-xl text-white font-semibold text-xs sm:text-sm transition active:scale-95 ${ratingColor(r)}`}
               >
                 <span>{ratingLabel(r)}</span>
                 <span className="text-xs opacity-80 font-normal mt-0.5">{preview(r)}</span>

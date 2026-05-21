@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import LogoutButton from "./LogoutButton";
+import MobileMenu from "./MobileMenu";
 
 export default async function NavBar() {
   const supabase = await createServerSupabaseClient();
@@ -20,7 +21,8 @@ export default async function NavBar() {
           🇳🇱 DutchClass
         </Link>
 
-        <div className="flex items-center gap-4 text-sm font-medium text-gray-600">
+        {/* Desktop nav */}
+        <div className="hidden sm:flex items-center gap-4 text-sm font-medium text-gray-600">
           <Link href="/flashcards" className="hover:text-dutch-orange transition">Flashcards</Link>
           <Link href="/theory"     className="hover:text-dutch-orange transition">Theory</Link>
           <Link href="/stats"      className="hover:text-dutch-orange transition">Stats</Link>
@@ -31,9 +33,12 @@ export default async function NavBar() {
             </Link>
           )}
           <span className="text-gray-200">|</span>
-          <span className="text-xs text-gray-400 hidden sm:block truncate max-w-32">{user?.email}</span>
+          <span className="text-xs text-gray-400 truncate max-w-[8rem]">{user?.email}</span>
           <LogoutButton />
         </div>
+
+        {/* Mobile hamburger */}
+        <MobileMenu isAdmin={isAdmin} email={user?.email} />
       </div>
     </nav>
   );
