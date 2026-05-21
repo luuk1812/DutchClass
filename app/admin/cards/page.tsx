@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { deleteCard } from "../actions";
+import DeleteButton from "@/components/DeleteButton";
 import Link from "next/link";
 
 export default async function AdminCardsPage() {
@@ -52,18 +53,7 @@ export default async function AdminCardsPage() {
                     >
                       Edit
                     </Link>
-                    <form action={deleteCard}>
-                      <input type="hidden" name="id" value={card.id} />
-                      <button
-                        type="submit"
-                        className="text-red-400 hover:text-red-600 transition"
-                        onClick={(e) => {
-                          if (!confirm(`Delete "${card.dutch}"?`)) e.preventDefault();
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteButton action={deleteCard} id={card.id} label={card.dutch} />
                   </div>
                 </td>
               </tr>

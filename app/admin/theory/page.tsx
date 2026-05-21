@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { deleteTheorySection } from "../actions";
+import DeleteButton from "@/components/DeleteButton";
 import Link from "next/link";
 
 export default async function AdminTheoryPage() {
@@ -56,18 +57,7 @@ export default async function AdminTheoryPage() {
                     >
                       Edit
                     </Link>
-                    <form action={deleteTheorySection}>
-                      <input type="hidden" name="id" value={section.id} />
-                      <button
-                        type="submit"
-                        className="text-red-400 hover:text-red-600 transition"
-                        onClick={(e) => {
-                          if (!confirm(`Delete "${section.title}"?`)) e.preventDefault();
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeleteButton action={deleteTheorySection} id={section.id} label={section.title} />
                   </div>
                 </td>
               </tr>
