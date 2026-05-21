@@ -13,32 +13,16 @@ export default async function FlashcardsPage() {
   const today = new Date().toISOString().split("T")[0];
   const now = new Date().toISOString();
 
-  // Settings
-  const { data: settingsRow } = await supabase
-    .from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
+  // Settings + due cards + progress all in parallel
+  const [{ data: settingsRow }, { data: dueReviews }, { data: dueLearning }, { data: allProgress }] =
+    await Promise.all([
+      supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("card_progress").select("*, cards(*)").eq("user_id", user.id).eq("state", "review").lte("due_date", today).order("due_date").limit(200),
+      supabase.from("card_progress").select("*, cards(*)").eq("user_id", user.id).in("state", ["learning", "relearning"]).lte("due_at", now),
+      supabase.from("card_progress").select("card_id").eq("user_id", user.id),
+    ]);
+
   const settings = parseSettings(settingsRow as Record<string, unknown> | null);
-
-  // 1. Due review cards
-  const { data: dueReviews } = await supabase
-    .from("card_progress")
-    .select("*, cards(*)")
-    .eq("user_id", user.id)
-    .eq("state", "review")
-    .lte("due_date", today)
-    .order("due_date")
-    .limit(settings.max_reviews_per_day);
-
-  // 2. Learning/relearning cards due now (minute precision)
-  const { data: dueLearning } = await supabase
-    .from("card_progress")
-    .select("*, cards(*)")
-    .eq("user_id", user.id)
-    .in("state", ["learning", "relearning"])
-    .lte("due_at", now);
-
-  // 3. New cards (no progress record yet for this user)
-  const { data: allProgress } = await supabase
-    .from("card_progress").select("card_id").eq("user_id", user.id);
   const seenIds = allProgress?.map((p) => p.card_id) ?? [];
 
   let newCards: Card[] = [];

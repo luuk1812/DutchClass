@@ -9,22 +9,20 @@ export default async function HomePage() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // New: cards this user has never touched
-  const { count: totalCards } = await supabase
-    .from("cards").select("*", { count: "exact", head: true });
-  const { count: seenCount } = await supabase
-    .from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+  // Run all counts in parallel
+  const [
+    { count: totalCards },
+    { count: seenCount },
+    { count: learningCount },
+    { count: dueCount },
+  ] = await Promise.all([
+    supabase.from("cards").select("*", { count: "exact", head: true }),
+    supabase.from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("state", ["learning", "relearning"]),
+    supabase.from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("state", "review").lte("due_date", today),
+  ]);
+
   const newCount = Math.max(0, (totalCards ?? 0) - (seenCount ?? 0));
-
-  // Learning: cards currently in learning or relearning steps
-  const { count: learningCount } = await supabase
-    .from("card_progress").select("*", { count: "exact", head: true })
-    .eq("user_id", user.id).in("state", ["learning", "relearning"]);
-
-  // Due: graduated cards due for review today
-  const { count: dueCount } = await supabase
-    .from("card_progress").select("*", { count: "exact", head: true })
-    .eq("user_id", user.id).eq("state", "review").lte("due_date", today);
 
   const total = newCount + (learningCount ?? 0) + (dueCount ?? 0);
 
