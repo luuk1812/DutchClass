@@ -16,6 +16,12 @@ const config: Config = {
       },
     },
   },
+  safelist: [
+    "bg-red-500", "hover:bg-red-600",
+    "bg-orange-400", "hover:bg-orange-500",
+    "bg-green-500", "hover:bg-green-600",
+    "bg-blue-500", "hover:bg-blue-600",
+  ],
   plugins: [],
 };
 

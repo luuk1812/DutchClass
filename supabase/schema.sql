@@ -65,7 +65,8 @@ insert into cards (dutch, english, example_nl, example_en, category) values
   ('goedemorgen',  'good morning',  'Goedemorgen! Hoe gaat het?',             'Good morning! How are you?',              'greetings'),
   ('tot ziens',    'goodbye',       'Tot ziens! We spreken elkaar snel.',     'Goodbye! We will talk soon.',             'greetings'),
   ('de appel',     'the apple',     'Mag ik een appel, alstublieft?',         'May I have an apple, please?',            'food'),
-  ('het water',    'the water',     'Ik drink elke dag veel water.',          'I drink a lot of water every day.',       'food');
+  ('het water',    'the water',     'Ik drink elke dag veel water.',          'I drink a lot of water every day.',       'food'),
+  ('ik mis je',    'I miss you',    'Ik mis je zo erg.',                      'I miss you so much.',                     'expressions');
 
 insert into theory_sections (title, slug, content, category, order_index) values
   (
