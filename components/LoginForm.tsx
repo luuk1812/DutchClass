@@ -31,7 +31,8 @@ export default function LoginForm() {
           options: { emailRedirectTo: `${location.origin}/auth/callback` },
         });
         if (error) throw error;
-        setMsg({ type: "success", text: "Account created! Check your email to confirm, then sign in." });
+        router.push("/");
+        router.refresh();
       }
     } catch (err: unknown) {
       setMsg({
