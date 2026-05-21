@@ -18,7 +18,8 @@ export async function POST(req: NextRequest) {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (list) => list.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
+        setAll: (list: { name: string; value: string; options?: Record<string, unknown> }[]) =>
+          list.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
       },
     }
   );
