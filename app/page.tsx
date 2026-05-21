@@ -22,8 +22,8 @@ export default async function HomePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-dutch-blue">Hallo! 👋</h1>
-        <p className="text-gray-600 mt-1">Let&apos;s practice your Dutch today.</p>
+        <h1 className="text-3xl font-bold text-dutch-blue">Hey Amber!</h1>
+        <p className="text-gray-600 mt-1">Hurry up and practice some Dutch already!</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
