@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { ratingLabel, ratingColor } from "@/lib/sm2";
-import type { Rating } from "@/lib/types";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { calculateNextReview, ratingLabel, ratingColor, intervalPreview, stateChip } from "@/lib/sm2";
+import type { Rating, CardProgress, CardState } from "@/lib/types";
+import type { ParsedSettings } from "@/lib/settings";
 
 interface Props {
   card: {
@@ -11,20 +12,69 @@ interface Props {
     example_nl: string | null;
     example_en: string | null;
   };
+  progress: CardProgress | null;
+  settings: ParsedSettings;
   onRate: (rating: Rating) => void;
 }
 
-export default function FlashCard({ card, onRate }: Props) {
+export default function FlashCard({ card, progress, settings, onRate }: Props) {
   const [flipped, setFlipped] = useState(false);
 
-  function handleRate(rating: Rating) {
-    setFlipped(false);
-    // Small delay so the card visually resets before the next one renders
-    setTimeout(() => onRate(rating), 150);
+  // Stable ref so the keydown listener never goes stale
+  const onRateRef = useRef(onRate);
+  onRateRef.current = onRate;
+
+  const handleRate = useCallback((rating: Rating) => {
+    onRateRef.current(rating);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        setFlipped((f) => !f);
+        return;
+      }
+      if (!flipped) return;
+      if (e.key === "1") handleRate(1);
+      else if (e.key === "2") handleRate(2);
+      else if (e.key === "3") handleRate(3);
+      else if (e.key === "4") handleRate(4);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [flipped, handleRate]);
+
+  const state: CardState = progress?.state ?? "new";
+  const chip = stateChip(state);
+
+  function preview(rating: Rating): string {
+    return intervalPreview({
+      state,
+      step_index: progress?.step_index ?? 0,
+      interval: progress?.interval ?? 0,
+      ease_factor: progress?.ease_factor ?? 2.5,
+      lapses: progress?.lapses ?? 0,
+      rating,
+      settings,
+    });
   }
 
   return (
     <div className="space-y-4">
+      {/* State badge + lapse count */}
+      <div className="flex items-center justify-between">
+        <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${chip.className}`}>
+          {chip.label}
+        </span>
+        {(progress?.lapses ?? 0) > 0 && (
+          <span className="text-xs text-gray-400">Lapses: {progress!.lapses}</span>
+        )}
+      </div>
+
+      {/* Card */}
       <div
         className="card-flip w-full cursor-pointer select-none"
         style={{ height: 220 }}
@@ -35,7 +85,7 @@ export default function FlashCard({ card, onRate }: Props) {
           <div className="card-front absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-white border-2 border-dutch-blue shadow-md p-6 text-center">
             <p className="text-xs uppercase tracking-widest text-gray-400 mb-3">Dutch</p>
             <p className="text-3xl font-bold text-dutch-blue">{card.dutch}</p>
-            <p className="text-sm text-gray-400 mt-4">Tap to reveal</p>
+            <p className="text-xs text-gray-300 mt-5">Space · Enter · click to reveal</p>
           </div>
 
           {/* Back */}
@@ -52,22 +102,23 @@ export default function FlashCard({ card, onRate }: Props) {
         </div>
       </div>
 
+      {/* Rating buttons with interval previews */}
       {flipped && (
-        <div className="grid grid-cols-4 gap-2">
-          {([1, 2, 3, 4] as Rating[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => handleRate(r)}
-              className={`py-3 rounded-xl text-white font-semibold text-sm transition ${ratingColor(r)}`}
-            >
-              {ratingLabel(r)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {!flipped && (
-        <p className="text-center text-xs text-gray-400">Click the card to flip it</p>
+        <>
+          <div className="grid grid-cols-4 gap-2">
+            {([1, 2, 3, 4] as Rating[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => handleRate(r)}
+                className={`flex flex-col items-center py-2.5 rounded-xl text-white font-semibold text-sm transition ${ratingColor(r)}`}
+              >
+                <span>{ratingLabel(r)}</span>
+                <span className="text-xs opacity-80 font-normal mt-0.5">{preview(r)}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-300">1 · 2 · 3 · 4</p>
+        </>
       )}
     </div>
   );

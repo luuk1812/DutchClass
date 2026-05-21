@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { calculateNextReview } from "@/lib/sm2";
-import type { Rating } from "@/lib/types";
+import { parseSettings } from "@/lib/settings";
+import type { Rating, CardState } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
   const { card_id, rating } = (await req.json()) as { card_id: string; rating: Rating };
@@ -24,13 +25,18 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  // Require authenticated user
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Load this user's existing progress for the card
+  // Load settings
+  const { data: settingsRow } = await supabase
+    .from("user_settings")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const settings = parseSettings(settingsRow as Record<string, unknown> | null);
+
+  // Load existing progress
   const { data: existing } = await supabase
     .from("card_progress")
     .select("*")
@@ -38,28 +44,55 @@ export async function POST(req: NextRequest) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const next = calculateNextReview(
+  const stateBefore: CardState = (existing?.state as CardState) ?? "new";
+
+  const result = calculateNextReview({
+    state: stateBefore,
+    step_index: existing?.step_index ?? 0,
+    interval: existing?.interval ?? 0,
+    ease_factor: existing?.ease_factor ?? 2.5,
+    lapses: existing?.lapses ?? 0,
     rating,
-    existing?.interval ?? 0,
-    existing?.ease_factor ?? 2.5,
-    existing?.repetitions ?? 0
-  );
+    settings,
+  });
 
   const now = new Date().toISOString();
 
   if (existing) {
-    await supabase
-      .from("card_progress")
-      .update({ ...next, last_reviewed: now })
-      .eq("id", existing.id);
+    await supabase.from("card_progress").update({
+      state: result.state,
+      step_index: result.step_index,
+      interval: result.interval,
+      ease_factor: result.ease_factor,
+      lapses: result.lapses,
+      due_date: result.due_date,
+      due_at: result.due_at,
+      last_reviewed: now,
+      repetitions: (existing.repetitions ?? 0) + 1,
+    }).eq("id", existing.id);
   } else {
     await supabase.from("card_progress").insert({
       card_id,
       user_id: user.id,
-      ...next,
+      state: result.state,
+      step_index: result.step_index,
+      interval: result.interval,
+      ease_factor: result.ease_factor,
+      lapses: result.lapses,
+      due_date: result.due_date,
+      due_at: result.due_at,
       last_reviewed: now,
+      repetitions: 1,
     });
   }
 
-  return NextResponse.json({ ok: true, next });
+  // Log review for stats
+  await supabase.from("reviews").insert({
+    user_id: user.id,
+    card_id,
+    rating,
+    state_before: stateBefore,
+  });
+
+  return NextResponse.json({ ok: true, result });
 }

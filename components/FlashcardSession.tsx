@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import FlashCard from "./FlashCard";
-import type { Rating } from "@/lib/types";
+import type { Rating, CardProgress } from "@/lib/types";
+import type { ParsedSettings } from "@/lib/settings";
 
 interface SessionCard {
   card: {
@@ -13,13 +14,18 @@ interface SessionCard {
     example_en: string | null;
     category: string;
   };
-  progress: { interval: number; ease_factor: number; repetitions: number } | null;
+  progress: CardProgress | null;
 }
 
-export default function FlashcardSession({ cards }: { cards: SessionCard[] }) {
+interface Props {
+  cards: SessionCard[];
+  settings: ParsedSettings;
+}
+
+export default function FlashcardSession({ cards, settings }: Props) {
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false);
-  const [results, setResults] = useState<{ rating: Rating }[]>([]);
+  const [results, setResults] = useState<Rating[]>([]);
 
   async function handleRate(rating: Rating) {
     const current = cards[index];
@@ -28,31 +34,22 @@ export default function FlashcardSession({ cards }: { cards: SessionCard[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ card_id: current.card.id, rating }),
     });
-
-    setResults((r) => [...r, { rating }]);
-
-    if (index + 1 >= cards.length) {
-      setDone(true);
-    } else {
-      setIndex((i) => i + 1);
-    }
+    setResults((r) => [...r, rating]);
+    if (index + 1 >= cards.length) setDone(true);
+    else setIndex((i) => i + 1);
   }
 
   if (done) {
-    const counts = results.reduce<Record<number, number>>((acc, r) => {
-      acc[r.rating] = (acc[r.rating] ?? 0) + 1;
-      return acc;
-    }, {});
-
+    const counts = results.reduce<Record<number, number>>((a, r) => ({ ...a, [r]: (a[r] ?? 0) + 1 }), {});
     return (
       <div className="text-center py-12 space-y-4">
         <p className="text-5xl">✅</p>
         <h2 className="text-2xl font-bold text-dutch-blue">Session complete!</h2>
-        <div className="flex justify-center gap-6 text-sm mt-4">
-          <Stat label="Again" value={counts[1] ?? 0} color="text-red-500" />
-          <Stat label="Hard" value={counts[2] ?? 0} color="text-orange-500" />
-          <Stat label="Good" value={counts[3] ?? 0} color="text-green-600" />
-          <Stat label="Easy" value={counts[4] ?? 0} color="text-blue-500" />
+        <div className="flex justify-center gap-8 mt-4">
+          <Tally label="Again" value={counts[1] ?? 0} color="text-red-500" />
+          <Tally label="Hard"  value={counts[2] ?? 0} color="text-orange-500" />
+          <Tally label="Good"  value={counts[3] ?? 0} color="text-green-600" />
+          <Tally label="Easy"  value={counts[4] ?? 0} color="text-blue-500" />
         </div>
         <button
           onClick={() => { setIndex(0); setDone(false); setResults([]); }}
@@ -65,31 +62,46 @@ export default function FlashcardSession({ cards }: { cards: SessionCard[] }) {
   }
 
   const current = cards[index];
+  const newCount      = cards.filter((c) => !c.progress).length;
+  const learningCount = cards.filter((c) => c.progress?.state === "learning" || c.progress?.state === "relearning").length;
+  const reviewCount   = cards.filter((c) => c.progress?.state === "review").length;
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between text-sm text-gray-400">
-        <span>{index + 1} / {cards.length}</span>
-        <span className="capitalize">{current.card.category}</span>
+      {/* Anki-style count header */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4 text-sm font-semibold">
+          <span className="text-blue-500">{newCount}</span>
+          <span className="text-orange-500">{learningCount}</span>
+          <span className="text-green-600">{reviewCount}</span>
+        </div>
+        <span className="text-sm text-gray-400">{index + 1} / {cards.length}</span>
       </div>
 
-      <div className="w-full bg-gray-200 rounded-full h-1.5">
+      <div className="w-full bg-gray-200 rounded-full h-1">
         <div
-          className="bg-dutch-orange h-1.5 rounded-full transition-all"
-          style={{ width: `${((index) / cards.length) * 100}%` }}
+          className="bg-dutch-orange h-1 rounded-full transition-all"
+          style={{ width: `${(index / cards.length) * 100}%` }}
         />
       </div>
 
-      <FlashCard card={current.card} onRate={handleRate} />
+      {/* key= forces full remount on card change → state resets cleanly */}
+      <FlashCard
+        key={current.card.id}
+        card={current.card}
+        progress={current.progress}
+        settings={settings}
+        onRate={handleRate}
+      />
     </div>
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+function Tally({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="text-center">
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
-      <p className="text-gray-500">{label}</p>
+      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
     </div>
   );
 }

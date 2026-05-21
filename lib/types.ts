@@ -1,4 +1,5 @@
-export type Rating = 1 | 2 | 3 | 4; // Again, Hard, Good, Easy
+export type Rating = 1 | 2 | 3 | 4;
+export type CardState = "new" | "learning" | "review" | "relearning";
 
 export interface Card {
   id: string;
@@ -14,22 +15,22 @@ export interface CardProgress {
   id: string;
   user_id: string;
   card_id: string;
-  interval: number;       // days until next review
-  ease_factor: number;    // default 2.5
-  due_date: string;       // ISO date string
+  state: CardState;
+  step_index: number;
+  interval: number;
+  ease_factor: number;
+  lapses: number;
+  due_date: string;
+  due_at: string | null;
   repetitions: number;
   last_reviewed: string | null;
-}
-
-export interface CardWithProgress extends Card {
-  progress: CardProgress | null;
 }
 
 export interface TheorySection {
   id: string;
   title: string;
   slug: string;
-  content: string;        // markdown
-  order_index: number;
+  content: string;
   category: string;
+  order_index: number;
 }
