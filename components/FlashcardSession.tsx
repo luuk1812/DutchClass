@@ -51,12 +51,20 @@ export default function FlashcardSession({ cards, settings }: Props) {
           <Tally label="Good"  value={counts[3] ?? 0} color="text-green-600" />
           <Tally label="Easy"  value={counts[4] ?? 0} color="text-blue-500" />
         </div>
-        <button
-          onClick={() => { setIndex(0); setDone(false); setResults([]); }}
-          className="mt-6 px-6 py-2 rounded-full bg-dutch-orange text-white font-medium hover:opacity-90"
-        >
-          Review again
-        </button>
+        <div className="flex gap-3 justify-center mt-6">
+          <button
+            onClick={() => { setIndex(0); setDone(false); setResults([]); }}
+            className="px-6 py-2 rounded-full bg-dutch-orange text-white font-medium hover:opacity-90"
+          >
+            Review again
+          </button>
+          <a
+            href="/"
+            className="px-6 py-2 rounded-full border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition"
+          >
+            Back to home
+          </a>
+        </div>
       </div>
     );
   }
