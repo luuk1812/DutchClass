@@ -1,4 +1,7 @@
-export default function LetterNotice() {
+const ALLOWED = ["zxtf29@durham.ac.uk", "luukcsgo@gmail.com"];
+
+export default function LetterNotice({ email }: { email: string }) {
+  if (!ALLOWED.includes(email.toLowerCase())) return null;
   return (
     <div className="relative font-mono">
       {/* Aged paper card */}

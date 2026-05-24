@@ -44,7 +44,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      <LetterNotice />
+      <LetterNotice email={user.email ?? ""} />
 
       {/* Deck list */}
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
