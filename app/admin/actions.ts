@@ -29,6 +29,7 @@ export async function createCard(formData: FormData) {
     example_nl: (formData.get("example_nl") as string).trim() || null,
     example_en: (formData.get("example_en") as string).trim() || null,
     category:   (formData.get("category")   as string).trim() || "vocabulary",
+    deck:       (formData.get("deck")       as string).trim() || "dutch",
   });
   revalidatePath("/admin/cards");
   redirect("/admin/cards");
@@ -45,6 +46,7 @@ export async function updateCard(formData: FormData) {
       example_nl: (formData.get("example_nl") as string).trim() || null,
       example_en: (formData.get("example_en") as string).trim() || null,
       category:   (formData.get("category")   as string).trim() || "vocabulary",
+      deck:       (formData.get("deck")       as string).trim() || "dutch",
     })
     .eq("id", id);
   revalidatePath("/admin/cards");

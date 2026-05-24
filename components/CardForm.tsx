@@ -9,7 +9,9 @@ interface CardFormProps {
     example_nl?: string | null;
     example_en?: string | null;
     category?: string;
+    deck?: string;
   };
+  decks: string[];
   submitLabel: string;
   cancelHref: string;
 }
@@ -17,6 +19,7 @@ interface CardFormProps {
 export default function CardForm({
   action,
   defaultValues,
+  decks,
   submitLabel,
   cancelHref,
 }: CardFormProps) {
@@ -26,10 +29,27 @@ export default function CardForm({
         <input type="hidden" name="id" value={defaultValues.id} />
       )}
 
-      <Field label="Dutch *" name="dutch" defaultValue={defaultValues?.dutch} required />
-      <Field label="English *" name="english" defaultValue={defaultValues?.english} required />
+      <Field label="Dutch *"      name="dutch"      defaultValue={defaultValues?.dutch}      required />
+      <Field label="English *"    name="english"    defaultValue={defaultValues?.english}    required />
       <Field label="Example (NL)" name="example_nl" defaultValue={defaultValues?.example_nl ?? ""} />
       <Field label="Example (EN)" name="example_en" defaultValue={defaultValues?.example_en ?? ""} />
+
+      {/* Deck — select from existing decks */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Deck *</label>
+        <select
+          name="deck"
+          defaultValue={defaultValues?.deck ?? decks[0] ?? "dutch"}
+          required
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dutch-orange bg-white capitalize"
+        >
+          {decks.map((d) => (
+            <option key={d} value={d} className="capitalize">
+              {d}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>

@@ -12,13 +12,15 @@ export default async function EditCardPage({
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
 
-  const { data: card } = await supabase
-    .from("cards")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [{ data: card }, { data: deckRows }] = await Promise.all([
+    supabase.from("cards").select("*").eq("id", id).single(),
+    supabase.from("cards").select("deck").order("deck"),
+  ]);
 
   if (!card) notFound();
+
+  const decks = [...new Set((deckRows ?? []).map((r) => r.deck))].sort();
+  if (!decks.length) decks.push("dutch");
 
   return (
     <div className="space-y-6">
@@ -31,6 +33,7 @@ export default async function EditCardPage({
       <CardForm
         action={updateCard}
         defaultValues={card}
+        decks={decks}
         submitLabel="Save changes"
         cancelHref="/admin/cards"
       />
