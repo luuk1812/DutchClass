@@ -40,10 +40,6 @@ export default function LetterNotice() {
           </div>
         </div>
 
-        {/* Decorative horizontal rule */}
-        <div className="border-t border-amber-200 pt-2 text-[10px] text-amber-400 tracking-widest uppercase text-center">
-          — Dutch Learning Archive · 2026 —
-        </div>
       </div>
     </div>
   );

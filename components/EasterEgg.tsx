@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-const TARGET_EMAILS = ["zxtf29@durham.ac.uk", "luukcsgo@gmail.com"];
+const TARGET_EMAILS: string[] = []; // disabled
 
 export default function EasterEgg({ email }: { email: string }) {
   const [dismissed, setDismissed] = useState(false);
