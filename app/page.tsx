@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import EasterEgg from "@/components/EasterEgg";
+import LetterNotice from "@/components/LetterNotice";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
@@ -43,10 +44,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-dutch-blue">Hey Amber!</h1>
-        <p className="text-gray-600 mt-1">Hurry up and practice some Dutch already!</p>
-      </div>
+      <LetterNotice />
 
       {/* Deck list */}
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
