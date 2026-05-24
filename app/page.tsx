@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+import EasterEgg from "@/components/EasterEgg";
 
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient();
@@ -9,58 +10,90 @@ export default async function HomePage() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // Run all counts in parallel
-  const [
-    { count: totalCards },
-    { count: seenCount },
-    { count: learningCount },
-    { count: dueCount },
-  ] = await Promise.all([
-    supabase.from("cards").select("*", { count: "exact", head: true }),
-    supabase.from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("state", ["learning", "relearning"]),
-    supabase.from("card_progress").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("state", "review").lte("due_date", today),
+  // Fetch all cards and user progress in parallel
+  const [{ data: allCards }, { data: userProgress }] = await Promise.all([
+    supabase.from("cards").select("id, deck"),
+    supabase.from("card_progress")
+      .select("card_id, state, due_date")
+      .eq("user_id", user.id),
   ]);
 
-  const newCount = Math.max(0, (totalCards ?? 0) - (seenCount ?? 0));
+  // Build a progress lookup map
+  const progressMap = new Map((userProgress ?? []).map((p) => [p.card_id, p]));
 
-  const total = newCount + (learningCount ?? 0) + (dueCount ?? 0);
+  // Compute per-deck stats
+  const deckNames = [...new Set((allCards ?? []).map((c) => c.deck))].sort();
+
+  const deckStats = deckNames.map((deck) => {
+    const cards = (allCards ?? []).filter((c) => c.deck === deck);
+    const newCount = cards.filter((c) => !progressMap.has(c.id)).length;
+    const learningCount = cards.filter((c) => {
+      const s = progressMap.get(c.id)?.state;
+      return s === "learning" || s === "relearning";
+    }).length;
+    const dueCount = cards.filter((c) => {
+      const p = progressMap.get(c.id);
+      return p?.state === "review" && (p.due_date ?? "") <= today;
+    }).length;
+    const total = newCount + learningCount + dueCount;
+    return { deck, newCount, learningCount, dueCount, total };
+  });
+
+  const grandTotal = deckStats.reduce((s, d) => s + d.total, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-dutch-blue">Hey Amber!</h1>
         <p className="text-gray-600 mt-1">Hurry up and practice some Dutch already!</p>
       </div>
 
-      {/* Anki-style deck overview */}
-      <div className="bg-white rounded-2xl border shadow-sm px-6 py-4 flex items-center justify-between">
-        <span className="font-semibold text-gray-700">Dutch</span>
-        <div className="flex gap-8 text-center">
-          <div>
-            <p className="text-sm font-bold text-blue-500">{newCount}</p>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">New</p>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-orange-500">{learningCount ?? 0}</p>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Learning</p>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-green-600">{dueCount ?? 0}</p>
-            <p className="text-xs text-gray-400 uppercase tracking-wide">Due</p>
+      {/* Deck list */}
+      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+        {/* Header row */}
+        <div className="flex items-center justify-between px-5 py-2 bg-gray-50 border-b text-xs font-medium uppercase tracking-wide text-gray-400">
+          <span>Deck</span>
+          <div className="flex gap-6 text-right">
+            <span className="w-8">New</span>
+            <span className="w-14">Learn</span>
+            <span className="w-8">Due</span>
           </div>
         </div>
+
+        {deckStats.map(({ deck, newCount, learningCount, dueCount, total }) => (
+          <Link
+            key={deck}
+            href={`/flashcards?deck=${encodeURIComponent(deck)}`}
+            className="flex items-center justify-between px-5 py-4 border-b last:border-0 hover:bg-orange-50 transition group"
+          >
+            <span className="font-medium text-gray-800 capitalize group-hover:text-dutch-orange transition">
+              {deck}
+            </span>
+            <div className="flex gap-6 text-sm font-semibold text-right">
+              <span className={`w-8 text-center ${newCount > 0 ? "text-blue-500" : "text-gray-300"}`}>
+                {newCount}
+              </span>
+              <span className={`w-14 text-center ${learningCount > 0 ? "text-orange-500" : "text-gray-300"}`}>
+                {learningCount}
+              </span>
+              <span className={`w-8 text-center ${dueCount > 0 ? "text-green-600" : "text-gray-300"}`}>
+                {dueCount}
+              </span>
+            </div>
+          </Link>
+        ))}
       </div>
 
+      {/* Action buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
           href="/flashcards"
-          className="relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-dutch-orange text-white p-6 sm:p-8 hover:opacity-90 transition font-semibold text-lg shadow"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-dutch-orange text-white p-6 sm:p-8 hover:opacity-90 transition font-semibold text-lg shadow"
         >
           <span className="text-4xl">🃏</span>
-          Study now
-          {total > 0 && (
-            <span className="text-sm font-normal opacity-90">{total} cards waiting</span>
+          Study all decks
+          {grandTotal > 0 && (
+            <span className="text-sm font-normal opacity-90">{grandTotal} cards waiting</span>
           )}
         </Link>
 
@@ -72,6 +105,8 @@ export default async function HomePage() {
           Grammar &amp; theory
         </Link>
       </div>
+
+      <EasterEgg email={user.email ?? ""} />
     </div>
   );
 }
