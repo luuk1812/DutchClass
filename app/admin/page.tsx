@@ -26,7 +26,7 @@ export default async function AdminPage() {
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="Cards" value={cardCount ?? 0} />
         <StatCard label="Theory sections" value={theoryCount ?? 0} />
-        <StatCard label="Users" value={userCount ?? 0} />
+        <StatCard label="Users" value={userCount ?? 0} href="/admin/users" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -42,6 +42,12 @@ export default async function AdminPage() {
           title="Manage theory"
           description="Add, edit, or delete grammar lessons"
         />
+        <AdminLink
+          href="/admin/users"
+          emoji="👥"
+          title="View users"
+          description="See user progress and deck stats"
+        />
       </div>
 
       <Link href="/" className="inline-block text-sm text-gray-400 hover:text-dutch-orange">
@@ -51,11 +57,23 @@ export default async function AdminPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border bg-white p-4 shadow-sm text-center">
+function StatCard({ label, value, href }: { label: string; value: number; href?: string }) {
+  const inner = (
+    <>
       <p className="text-2xl font-bold text-dutch-blue">{value}</p>
       <p className="text-xs text-gray-500 mt-1">{label}</p>
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className="rounded-xl border bg-white p-4 shadow-sm text-center block hover:border-dutch-orange transition">
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div className="rounded-xl border bg-white p-4 shadow-sm text-center">
+      {inner}
     </div>
   );
 }
