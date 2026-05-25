@@ -5,6 +5,7 @@ import FlashCard from "./FlashCard";
 import type { Rating, CardProgress } from "@/lib/types";
 import type { ParsedSettings } from "@/lib/settings";
 import { ratingLabel } from "@/lib/sm2";
+import confetti from "canvas-confetti";
 
 interface SessionCard {
   card: {
@@ -54,6 +55,16 @@ export default function FlashcardSession({ cards, settings }: Props) {
 
   async function handleRate(rating: Rating) {
     const current = cards[index];
+
+    // ── Confetti on Good ────────────────────────────────────────────────────
+    if (rating === 3) {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: ["#FF6B35", "#1B4F8A", "#FFD700", "#ffffff"],
+      });
+    }
 
     // ── Optimistic: advance the UI immediately ──────────────────────────────
     setResults((r) => [...r, rating]);
